@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+group = 'me.caarson'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://papermc.io/repo/repository/maven-public/' }
+}
+
+dependencies {
+    classpath "com.github.johnrengelman:shadow:7.0.0"
+    implementation 'org.spigotmc:paper-api:1.20'
+    compileOnly 'com.github.phoenixapi:phoenix-api:1.6.3' // soft-depend
+}
+
+sourceCompatibility = 18
+targetCompatibility = 18
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

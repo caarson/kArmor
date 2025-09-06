@@ -1,0 +1,58 @@
+sets:
+  Veteran:
+    item:
+      helmet: { material: NETHERITE_HELMET, name: "&6&lVeteran Helm", lore: ["&7A helm awarded to seasoned fighters."], enchants: ["PROTECTION_ENVIRONMENTAL:4","UNBREAKING:3"] }
+      chest:  { material: NETHERITE_CHESTPLATE, name: "&6&lVeteran Chest", lore: ["&7Armor of the old guard."], enchants: ["PROTECTION_ENVIRONMENTAL:4","UNBREAKING:3"] }
+      legs:   { material: NETHERITE_LEGGINGS, name: "&6&lVeteran Legs", lore: ["&7Stands the test of time."], enchants: ["PROTECTION_ENVIRONMENTAL:4","UNBREAKING:3"] }
+      boots:  { material: NETHERITE_BOOTS, name: "&6&lVeteran Boots", lore: ["&7March of legends."], enchants: ["PROTECTION_ENVIRONMENTAL:4","UNBREAKING:3"] }
+    cosmetics:
+      enabled: true
+      tick_interval: 10
+      particle: FLAME
+      particle_count: 8
+      particle_offset: 0.2
+      particle_speed: 0.01
+      sound: { enabled: false, type: ENTITY_EXPERIENCE_ORB_PICKUP, volume: 0.5, pitch: 1.2 }
+
+cosmetic_enchants:
+  AURA_FLAME:
+    display: "&cAura: Flame"
+    lore_line: "&7Cosmetic: &cFlame Aura"
+    max_level: 1
+    particles:
+      particle: FLAME
+      count_per_tick: 4
+      offset: 0.15
+      speed: 0.0
+    sound:
+      enabled: false
+  SPARKS_I:
+    display: "&eSparks I"
+    lore_line: "&7Cosmetic: &eSparks I"
+    max_level: 3
+    particles:
+      particle: CRIT
+      count_per_tick: 2
+      offset: 0.2
+      speed: 0.01
+
+preserve_meta:
+  merge_vanilla_enchants: true
+  respect_max_levels: true
+  allow_up_tier_if_config_higher: false
+  append_lore_instead_of_replace: true
+
+anvil:
+  block_repairs: true
+  block_mending: false
+
+messages:
+  prefix: "&8[&6kArmor&8]&r "
+  given_piece: "%prefix%Gave &e%set%&7 &f%slot%&7 to %rankColor%%player%&7."
+  equipped_full: "%prefix%%rankColor%%player% &7equipped the &e%set%&7 set!"
+  unequipped_full: "%prefix%%rankColor%%player% &7unequipped the &e%set%&7 set."
+  enchant_added: "%prefix%Added &e%cosmeticId%&7 to item in hand."
+  enchant_removed: "%prefix%Removed &e%cosmeticId%&7 from item in hand."
+  enchant_list_header: "%prefix%Cosmetic enchants on item:"
+  enchant_list_line: " &8- &e%cosmeticId% &7(level %level%)"
+  no_item_in_hand: "%prefix%Hold an item in your main hand.

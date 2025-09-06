@@ -1,0 +1,18 @@
+name: kArmor
+version: 1.0.0
+api-version: 1.20
+main: me.caarson.karmor.KArmorPlugin
+commands:
+  karmor:
+    give: GivePieceCommand
+    giveSet: GiveSetCommand
+    tagFromHand: ItemTagger
+    enchant:
+      add: EnchantAddCommand
+      remove: EnchantRemoveCommand
+      list: EnchantListCommand
+    reload: ReloadCommand
+permissions:
+  karmor.admin: true
+softdepend:
+  Phoenix-API
