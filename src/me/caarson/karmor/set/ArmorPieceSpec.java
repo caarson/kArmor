@@ -1,48 +1,52 @@
 package me.caarson.karmor.set;
 
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import me.caarson.karmor.cosmetic.CosmeticManager;
+import me.caarson.karmor.cosmetic.ParticleManager;
 
 public class ArmorPieceSpec {
-    private final Material material;
-    private final String name;
-    private final List<String> lore;
-    private final Map<String, Integer> enchants;
+    private final ConfigurationSection section;
+    private Map<String, String> lore = new HashMap<>();
 
     public ArmorPieceSpec(ConfigurationSection section) {
-        this.material = Material.valueOf(section.getString("material", "NETHERITE_HELMET"));
-        this.name = section.getString("name", "&6&lVeteran Helm");
-        this.lore = section.getStringList("lore", List.of("&7A helm awarded to seasoned fighters."));
-        this.enchants = parseEnchants(section.getStringList("enchants"));
+        this.section = section;
     }
 
-    private Map<String, Integer> parseEnchants(List<String> enchantStrings) {
-        return enchantStrings.stream().map(s -> s.split(":"))
-            .collect(Collectors.toMap(
-                parts -> parts[0],
-                parts -> Integer.parseInt(parts[1])
-            ));
-    }
-
-    public ItemStack createItem() {
-        ItemStack item = new ItemStack(material);
-        item.setDisplayName(name);
-        item.setLore(lore);
+    // Get piece type
+    public String getType() { return section.getString("type", "armor"); }
+    
+    // Get item metadata (e.g., enchantment)
+    public String getEnchantType() { return section.getString("enchant_type", ""); }
+    
+    // Get lore text (for display purposes)
+    public Map<String, String> getLore() {
+        if (!section.contains("lore")) return lore;
         
-        for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
-            item.addEnchant(org.bukkit.enchantments.Enchantment.getByKey(entry.getKey()), entry.getValue(), true);
+        for (String key : section.getKeys(false)) {
+            lore.put(key, section.getString(key));
         }
-        
-        return item;
+        return lore;
     }
 
-    public String getSlot() {
-        // Slot is derived from configuration path, e.g., "helmet" in section
-        // This method may not be necessary if slot is handled externally (via ArmorSet)
-        return null; // Placeholder for future implementation
+    // Set item metadata
+    public void setEnchantType(String enchantType) { 
+        section.set("enchant_type", enchantType); 
+    }
+    
+    // Update lore text
+    public void updateLore(Map<String, String> newLore) {
+        lore = newLore;
+        for (String key : newLore.keySet()) {
+            section.set(key, newLore.get(key));
+        }
+    }
+
+    // Transient helper method to find cosmetic profile if already supported by other classes
+public Optional<ParticleManager.ActiveProfile> findCosmeticProfile(ItemStack stack, CosmeticManager cm) {
+        return cm.loadProfile(stack);
     }
 }

@@ -9,7 +9,9 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import me.caarson.karmor.config.ConfigManager;
-
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 public class EnchantAddCommand implements CommandExecutor {
     private final ConfigManager configManager;
     private final Plugin plugin;
@@ -60,18 +62,19 @@ public class EnchantAddCommand implements CommandExecutor {
         // Add to PDC list
         PersistentDataContainer pdc = itemInHand.getItemMeta().getPersistentDataContainer();
         List<String> enchantIds = new ArrayList<>();
-        if (pdc.hasKey(new NamespacedKey(plugin, "karmor", "cosmetic_enchants"), PersistentDataType.STRING_LIST)) {
-            enchantIds = pdc.get(
-                new NamespacedKey(plugin, "karmor", "cosmetic_enchants"),
-                PersistentDataType.STRING_LIST
-            );
+if (pdc.has(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), PersistentDataType.STRING)) {
+            String enchantIdsString = pdc.get(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), PersistentDataType.STRING);
+            if (enchantIdsString != null && !enchantIdsString.isEmpty()) {
+                enchantIds = new ArrayList<>(Arrays.asList(enchantIdsString.split(",")));
+            }
         }
 
         // Ensure the cosmeticId isn't already present (if needed)
         if (!enchantIds.contains(cosmeticId)) {
             enchantIds.add(cosmeticId);
-            pdc.set(new NamespacedKey(plugin, "karmor", "cosmetic_enchants"), 
-                PersistentDataType.STRING_LIST, enchantIds);
+            String enchantIdsString = String.join(",", enchantIds);
+            pdc.set(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), 
+                PersistentDataType.STRING, enchantIdsString);
         }
 
         sender.sendMessage(configManager.getMessagesPrefix() + 

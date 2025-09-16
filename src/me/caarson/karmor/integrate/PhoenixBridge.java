@@ -7,7 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredListener;
 import java.util.HashMap;
 import java.util.Map;
-
+import xyz.refinedev.phoenix.Phoenix; // Add proper import
 public class PhoenixBridge {
     private final Plugin plugin;
     private boolean isPhoenixAPIAvailable = false;
@@ -20,7 +20,7 @@ public class PhoenixBridge {
     public void initialize() {
         try {
             // Check for Phoenix-API availability (via soft-depend)
-            Class.forName("com.github.phoenixapi.PhoenixAPI");
+            Class.forName("xyz.refinedev.phoenix.Phoenix");
             isPhoenixAPIAvailable = true;
             
             // Initialize rank colors from config
@@ -29,7 +29,7 @@ public class PhoenixBridge {
             // Example: if Phoenix-API, then %rankColor% is replaced by actual color code.
             
             // We assume that Phoenix-API provides a method to get rank colors
-            // For example in PhoenixAPI: `PhoenixAPI.getRankColor(player)`
+            // For example in PhoenixAPI: `Phoenix.getRankColor(player)`
         } catch (ClassNotFoundException e) {
             plugin.getLogger().warning("Phoenix-API not available; using fallback white.");
             isPhoenixAPIAvailable = false;
@@ -46,7 +46,7 @@ public class PhoenixBridge {
         } else {
             try {
                 // Phoenix-API method: assume it exists
-                String colorCode = com.github.phoenixapi.PhoenixAPI.getRankColor(player);
+String colorCode = Phoenix.getRankColor(player);
                 return colorCode;
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to get rank color via Phoenix-API; using fallback white.");

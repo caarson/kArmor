@@ -11,6 +11,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import me.caarson.karmor.set.ArmorPieceSpec;
 import me.caarson.karmor.config.ConfigManager;
+import java.util.List;
 
 public class GivePieceCommand implements CommandExecutor {
     private final ConfigManager configManager;

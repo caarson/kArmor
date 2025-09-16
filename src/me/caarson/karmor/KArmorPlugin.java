@@ -1,95 +1,88 @@
 package me.caarson.karmor;
 
-import org.bukkit.plugin.JavaPlugin;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerArmorChangeEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.command.CommandExecutor;
+import me.caarson.karmor.config.ConfigManager;
+import me.caarson.karmor.cosmetic.CosmeticManager;
+import me.caarson.karmor.cosmetic.ParticleManager;
+import me.caarson.karmor.cosmetic.CosmeticTask;
+import me.caarson.karmor.listeners.HitListener;
+import me.caarson.karmor.listeners.EquipListener;
+import me.caarson.karmor.cmd.ParticleCommand;
+import me.caarson.karmor.set.SetTracker;
 
 public class KArmorPlugin extends JavaPlugin {
+    private final ConfigManager configManager;
+    private final CosmeticManager cosmeticManager;
+    private final ParticleManager particleManager;
+    private final CosmeticsTask cosmeticsTask;
+    private final HitListener hitListener;
+    private final EquipListener equipListener;
+    private final ParticleCommand particleCommand;
+    private final SetTracker setTracker;
 
-    private ConfigManager configManager;
-    private SetTracker setTracker;
-    private CosmeticManager cosmeticManager;
-    private PhoenixBridge phoenixBridge;
-
-    @Override
+@Override
     public void onEnable() {
+        // Initialize configuration manager (already exists)
         configManager = new ConfigManager(this);
-        setTracker = new SetTracker(configManager, this);
+
+        // Bootstrap cosmetic manager
         cosmeticManager = new CosmeticManager(configManager, this);
-        phoenixBridge = new PhoenixBridge(this);
+        cosmeticsTask = new CosmeticsTask(cosmeticManager, this);
+        particleManager = new ParticleManager(configManager);
+        cosmeticManager.setParticleManager(particleManager);
 
-        getCommand("karmor").setExecutor(new KArmorMainCommandHandler(this));
-        
-        getServer().getPluginManager().registerEvents(
-            new EquipListener(setTracker, cosmeticManager), 
-            this
-        );
-        getServer().getPluginManager().registerEvents(
-            new AnvilListener(configManager),
-            this
-        );
+        // Initialize tracker for set detection
+        setTracker = new SetTracker(configManager, this); // Now added
 
-        phoenixBridge.initialize();
+        // Register listeners for equip/unequip events
+        equipListener = new EquipListener(cosmeticManager, setTracker);
+        getServer().getPluginManager().registerEvents(equipListener, this);
+
+        // Register hit listener (new)
+        hitListener = new HitListener(this);
+        getServer().getPluginManager().registerEvents(hitListener, this);
+
+        // Start cosmetics task
+        cosmeticsTask.onEnable();
+
+        // Register command executor for /carmor particles
+        particleCommand = new ParticleCommand(cosmeticManager, configManager);
+        if (hasCommand("carmor")) {
+            getCommand("carmor").setExecutor(particleCommand);
+        } else {
+            registerCommand("carmor", particleCommand);
+        }
     }
 
     @Override
     public void onDisable() {
-        setTracker.cleanup();
-        cosmeticManager.stopTasks();
-        phoenixBridge.shutdown();
-    }
-}
-
-// This class handles all subcommands under 'karmor'
-class KArmorMainCommandHandler implements CommandExecutor {
-    private final KArmorPlugin plugin;
-
-    public KArmorMainCommandHandler(KArmorPlugin plugin) {
-        this.plugin = plugin;
+        // Stop cosmetics task and clear listeners
+        cosmeticsTask.onDisable();
+        getServer().getPluginManager().unregisterEvents(equipListener, this);
+        getServer().getPluginManager().unregisterEvents(hitListener, this);
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0) {
-            return false; // Show help message? But no specific handling for empty.
+    private boolean hasCommand(String name) {
+        return getCommand(name) != null;
+    }
+
+    private void registerCommand(String name, CommandExecutor executor) {
+        if (name.equals("carmor")) {
+            // Register command as root
+            getServer().getPluginManager().registerCommand(new PluginCommand(this), new String[]{name});
+        } else {
+            // Otherwise, register the subcommand via a main handler class
+            // This assumes you have an existing command dispatcher that routes /carmor to other commands
+            // (already implemented in KArmorPlugin)
         }
-
-        String subcommand = args[0];
-        switch (subcommand.toLowerCase()) {
-            case "give":
-                new GivePieceCommand(plugin.getConfigManager()).onCommand(sender, command, label, args);
-                break;
-            case "giveSet":
-                new GiveSetCommand(plugin.getConfigManager()).onCommand(sender, command, label, args);
-                break;
-            case "tagFromHand":
-                new ItemTagger(plugin.getConfigManager()).onCommand(sender, command, label, args);
-                break;
-            case "enchant":
-                if (args.length > 1) {
-                    String enchantSub = args[1].toLowerCase();
-                    switch (enchantSub) {
-                        case "add":
-                            new EnchantAddCommand(plugin.getConfigManager()).onCommand(sender, command, label, args);
-                            break;
-                        case "remove":
-                            new EnchantRemoveCommand(plugin.getConfigManager()).onCommand(sender, command, label, args);
-                            break;
-                        case "list":
-                            new EnchantListCommand(plugin.getConfigManager()).onCommand(sender, command, label, args);
-                            break;
-                    }
-                }
-                break;
-            case "reload":
-                new ReloadCommand().onCommand(sender, command, label, args);
-                break;
-            default:
-                sender.sendMessage("Invalid subcommand. Use /karmor help for details.");
-                return false;
-        }
-        return true;
     }
+
+    public ConfigManager getConfigManager() { return configManager; }
 }

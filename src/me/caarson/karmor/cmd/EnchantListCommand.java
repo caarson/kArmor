@@ -9,6 +9,10 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import me.caarson.karmor.config.ConfigManager;
+import me.caarson.karmor.cosmetic.CosmeticEnchant;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class EnchantListCommand implements CommandExecutor {
     private final ConfigManager configManager;
@@ -36,35 +40,35 @@ public class EnchantListCommand implements CommandExecutor {
         
         // Check for cosmetic enchant list
         PersistentDataContainer pdc = itemInHand.getItemMeta().getPersistentDataContainer();
-        if (pdc.hasKey(new NamespacedKey(plugin, "karmor", "cosmetic_enchants"), PersistentDataType.STRING_LIST)) {
-            List<String> enchantIds = pdc.get(
-                new NamespacedKey(plugin, "karmor", "cosmetic_enchants"),
-                PersistentDataType.STRING_LIST
-            );
-            
-            if (enchantIds.isEmpty()) {
-                sender.sendMessage(configManager.getMessagesPrefix() + 
-                    "No cosmetic enchants on item.");
-                return false;
-            }
-            
-            sender.sendMessage(configManager.getMessagesPrefix() + 
-                configManager.getEnchantListHeader());
+        if (pdc.has(new NamespacedKey(plugin, "cosmetic_enchants"), PersistentDataType.STRING)) {
+            String enchantIdsString = pdc.get(new NamespacedKey(plugin, "cosmetic_enchants"), PersistentDataType.STRING);
+            if (enchantIdsString != null && !enchantIdsString.isEmpty()) {
+                List<String> enchantIds = new ArrayList<>(Arrays.asList(enchantIdsString.split(",")));
                 
-            for (String enchantId : enchantIds) {
-                CosmeticEnchant cosmeticEnchant = configManager.getCosmeticEnchant(enchantId);
-                sender.sendMessage(
-                    configManager.getMessagesPrefix() +
-                    " &8- &e" + enchantId + "&7(level " + 
-                    cosmeticEnchant.getMaxLevel() + ")"
-                );
+                if (enchantIds.isEmpty()) {
+                    sender.sendMessage(configManager.getMessagesPrefix() + 
+                        "No cosmetic enchants on item.");
+                    return false;
+                }
+                
+                sender.sendMessage(configManager.getMessagesPrefix() + 
+                    configManager.getEnchantListHeader());
+                    
+                for (String enchantId : enchantIds) {
+                    CosmeticEnchant cosmeticEnchant = configManager.getCosmeticEnchant(enchantId);
+                    sender.sendMessage(
+                        configManager.getMessagesPrefix() +
+                        " &8- &e" + enchantId + "&7(level " + 
+                        cosmeticEnchant.getMaxLevel() + ")"
+                    );
+                }
+                
+                return true;
             }
-            
-            return true;
-        } else {
-            sender.sendMessage(configManager.getMessagesPrefix() + 
-                "No cosmetic enchants on item.");
-            return false;
         }
+        
+        sender.sendMessage(configManager.getMessagesPrefix() + 
+            "No cosmetic enchants on item.");
+        return false;
     }
 }

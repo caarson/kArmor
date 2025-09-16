@@ -1,9 +1,9 @@
 package me.caarson.karmor.set;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.entity.Player;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ArmorSet {
     private final String setName;
@@ -16,12 +16,14 @@ public class ArmorSet {
 
     private Map<String, ArmorPieceSpec> loadPieces(ConfigurationSection section) {
         String basePath = "sets." + setName + ".item";
-        return Stream.of("helmet", "chest", "legs", "boots")
-            .map(slot -> new ArmorPieceSpec(section.getConfigurationSection(basePath + "." + slot)))
-            .collect(Collectors.toMap(
-                slot -> slot,
-                spec -> spec
-            );
+        Map<String, ArmorPieceSpec> result = new HashMap<>();
+        for (String slot : new String[]{"helmet", "chest", "legs", "boots"}) {
+            ConfigurationSection pieceSection = section.getConfigurationSection(basePath + "." + slot);
+            if (pieceSection != null) {
+                result.put(slot, new ArmorPieceSpec(pieceSection));
+            }
+        }
+        return result;
     }
 
     public boolean isFullSetEquipped(Player player) {

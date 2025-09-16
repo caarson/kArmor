@@ -9,6 +9,8 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 
 public class ItemTagger implements CommandExecutor {
     private final ConfigManager configManager;

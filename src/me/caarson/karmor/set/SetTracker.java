@@ -1,15 +1,18 @@
 package me.caarson.karmor.set;
 
+import org.bukkit.plugin.Plugin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerArmorChangeEvent;
-import org.bukkit.plugin.Plugin;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public class SetTracker {
     private final ConfigManager configManager;
     private final Plugin plugin;
-    private Map<Player, String> playerSetMap = new HashMap<>(); // Player -> set name
+    private Map<Player, String> activeSets = new HashMap<>();
+    private Set<Player> activePlayers = new HashSet<>();
 
     public SetTracker(ConfigManager configManager, Plugin plugin) {
         this.configManager = configManager;
@@ -18,48 +21,46 @@ public class SetTracker {
 
     public void onPlayerArmorChange(PlayerArmorChangeEvent event) {
         Player player = event.getPlayer();
+        
+        // Check if player is wearing armor set (or removing)
         String setName = getSetForPlayer(player);
-
-        if (event.getSlot().equals("helmet") || event.getSlot().equals("chestplate") ||
-            event.getSlot().equals("legs") || event.getSlot().equals("boots")) {
-
-            // Check for full set
-            boolean isFullSet = configManager.getArmorSet(setName).isFullSetEquipped(player);
-            
-            if (isFullSet) {
-                playerSetMap.put(player, setName);
-                // Start cosmetics tasks if enabled
-                plugin.getServer().getPluginManager().callEvent(new CosmeticTask.StartEvent(player));
-            } else {
-                playerSetMap.remove(player);
-                // Stop cosmetics tasks
-                plugin.getServer().getPluginManager().callEvent(new CosmeticTask.StopEvent(player));
-            }
+        if (setName != null && !configManager.getCosmeticSet(setName).isEnabled()) {
+            clearPlayerSet(player);
+            return;
+        }
+        
+        // Update active players
+        if (getActivePlayers().contains(player) && setName == null) {
+            clearPlayerSet(player); // player removed armor set
+        } else if (!getActivePlayers().contains(player) && setName != null) {
+            setActivePlayer(player); // player started wearing armor set
         }
     }
 
     public String getSetForPlayer(Player player) {
-        if (playerSetMap.containsKey(player)) {
-            return playerSetMap.get(player);
-        } else {
-            for (String setName : configManager.getConfig().getKeys("sets")) {
-                if (configManager.getArmorSet(setName).isFullSetEquipped(player)) {
-                    return setName;
-                }
-            }
-            return null; // Not wearing any set
-        }
+        return activeSets.getOrDefault(player, null);
     }
 
-    public boolean isPlayerWearingFullSet(Player player) {
-        return getSetForPlayer(player) != null;
+    public void setActivePlayer(Player player) {
+        activePlayers.add(player);
     }
 
-    public void cleanup() {
-        playerSetMap.clear();
+    public void clearPlayerSet(Player player) {
+        activeSets.remove(player);
+        activePlayers.remove(player);
     }
 
-    public Map<Player, String> getActivePlayers() {
-        return new HashMap<>(playerSetMap);
+    public Set<Player> getActivePlayers() {
+        return activePlayers;
+    }
+    
+    // Add a helper method to set the player's armor set
+    public void setPlayerSet(Player player, String setName) {
+        activeSets.put(player, setName);
+    }
+
+    // Helper: check if player has armor in slot (if armor piece exists)
+    private boolean isArmorInSlot(Player player, String slotName) {
+        return player.getInventory().getArmorContents().getItem(slotName).getType() != org.bukkit.Material.AIR;
     }
 }

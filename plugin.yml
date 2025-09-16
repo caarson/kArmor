@@ -1,18 +1,28 @@
-name: kArmor
+name: KArmor
 version: 1.0.0
-api-version: 1.20
 main: me.caarson.karmor.KArmorPlugin
+description: Armor system plugin for Bukkit/Paper Minecraft servers.
+website: https://github.com/caarson/kArmor
+author: caarson
+
 commands:
-  karmor:
-    give: GivePieceCommand
-    giveSet: GiveSetCommand
-    tagFromHand: ItemTagger
-    enchant:
-      add: EnchantAddCommand
-      remove: EnchantRemoveCommand
-      list: EnchantListCommand
-    reload: ReloadCommand
+    carmor:
+        description: KArmor root command
+        usage: /<command> help
+        aliases: [karmor]
+        permission: karmor.use
+    particles:
+        description: Cosmetic armor visuals control
+        usage: /carmor particles <subcommand>
+        aliases: []
+        permission: karmor.cosmetic.use
+
 permissions:
-  karmor.admin: true
-softdepend:
-  Phoenix-API
+    karmor.use:
+        default: true
+    karmor.cosmetic.use:
+        default: true
+    karmor.cosmetic.edit:
+        default: op
+    karmor.cosmetic.preview:
+        default: op

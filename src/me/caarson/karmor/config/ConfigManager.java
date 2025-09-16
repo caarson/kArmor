@@ -1,7 +1,16 @@
 package me.caarson.karmor.config;
 
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+
+import me.caarson.karmor.set.ArmorPieceSpec;
+import me.caarson.karmor.set.ArmorSet;
+import me.caarson.karmor.cosmetic.CosmeticSet;
+import me.caarson.karmor.cosmetic.CosmeticEnchant;
 
 public class ConfigManager {
     private final Plugin plugin;
@@ -14,7 +23,8 @@ public class ConfigManager {
 
     private void loadConfig() {
         // Load from config.yml
-        config = YamlConfiguration.loadConfiguration(plugin.getFile("config.yml"));
+        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        config = YamlConfiguration.loadConfiguration(configFile);
         
         // Set defaults if needed (based on user's config structure)
         config.addDefault("sets.Veteran.item.helmet", new HashMap<>());
@@ -24,7 +34,7 @@ public class ConfigManager {
 
         // Save updated config back to file
         try {
-            config.save(plugin.getFile("config.yml"));
+            config.save(configFile);
         } catch (IOException e) {
             plugin.getLogger().warning("Failed to save config: " + e.getMessage());
         }
@@ -34,6 +44,38 @@ public class ConfigManager {
         return config;
     }
     
+public ConfigurationSection getCosmeticsConfig() {
+        return config.getConfigurationSection("cosmetics");
+    }
+    
+    // Get cosmetic settings
+    public boolean isCosmeticsEnabled() { 
+        return getCosmeticsConfig().getBoolean("enabled", true); 
+    }
+    
+    public int getMaxParticlesPerTickPerPlayer() { 
+        return getCosmeticsConfig().getInt("maxParticlesPerTickPerPlayer", 150); 
+    }
+    
+    public double getVisibleRange() { 
+        return getCosmeticsConfig().getDouble("visibleRange", 32.0); 
+    }
+    
+    public String get(String path, String def) {
+        // General getter for config values
+        return getConfig().getString(path, def);
+    }
+    
+    public int get(String path, int def) {
+        // General getter for config values
+        return getConfig().getInt(path, def);
+    }
+    
+    public double get(String path, double def) {
+        // General getter for config values
+        return getConfig().getDouble(path, def);
+    }
+
     // Get set-specific items, cosmetics, etc.
     public ArmorPieceSpec getArmorPieceSpec(String setName, String slot) {
         // Example: sets.Veteran.item.helmet
@@ -61,7 +103,29 @@ public class ConfigManager {
         return config.getBoolean("anvil.block_repairs", true);
     }
 
-    public String getMessagesPrefix() {
+public String getMessagesPrefix() {
         return config.getString("messages.prefix", "&8[&6kArmor&8]&r ");
+    }
+
+    // Missing methods identified from compilation errors
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    public String getEnchantListHeader() {
+        return config.getString("messages.enchant_list_header", "&6=== Your Cosmetic Enchants ===");
+    }
+
+    public boolean isAppendLoreInsteadOfReplace() {
+        return config.getBoolean("preserve_meta.append_lore_instead_of_replace", false);
+    }
+
+    public ArmorSet getArmorSet(String setName) {
+        String path = "sets." + setName;
+        ConfigurationSection setSection = config.getConfigurationSection(path);
+        if (setSection != null) {
+            return new ArmorSet(setName, setSection);
+        }
+        return null;
     }
 }

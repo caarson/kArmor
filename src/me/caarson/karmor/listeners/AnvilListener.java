@@ -7,6 +7,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.event.Listener;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 
 public class AnvilListener implements Listener {
     private final ConfigManager configManager;

@@ -9,6 +9,9 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import me.caarson.karmor.config.ConfigManager;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class EnchantRemoveCommand implements CommandExecutor {
     private final ConfigManager configManager;
@@ -44,19 +47,21 @@ public class EnchantRemoveCommand implements CommandExecutor {
         PersistentDataContainer pdc = itemInHand.getItemMeta().getPersistentDataContainer();
         
         // Check for PDC list and remove
-        if (pdc.hasKey(new NamespacedKey(plugin, "karmor", "cosmetic_enchants"), PersistentDataType.STRING_LIST)) {
-            List<String> enchantIds = pdc.get(
-                new NamespacedKey(plugin, "karmor", "cosmetic_enchants"),
-                PersistentDataType.STRING_LIST);
-            
-            if (enchantIds.contains(cosmeticId)) {
-                enchantIds.remove(cosmeticId);
-                pdc.set(new NamespacedKey(plugin, "karmor", "cosmetic_enchants"), 
-                    PersistentDataType.STRING_LIST, enchantIds);
+        if (pdc.has(new NamespacedKey(plugin, "cosmetic_enchants"), PersistentDataType.STRING)) {
+            String enchantIdsString = pdc.get(new NamespacedKey(plugin, "cosmetic_enchants"), PersistentDataType.STRING);
+            if (enchantIdsString != null && !enchantIdsString.isEmpty()) {
+                List<String> enchantIds = new ArrayList<>(Arrays.asList(enchantIdsString.split(",")));
                 
-                sender.sendMessage(configManager.getMessagesPrefix() + 
-                    "Removed &e" + cosmeticId + "&7 from item in hand.");
-                return true;
+                if (enchantIds.contains(cosmeticId)) {
+                    enchantIds.remove(cosmeticId);
+                    String newEnchantIdsString = String.join(",", enchantIds);
+                    pdc.set(new NamespacedKey(plugin, "cosmetic_enchants"), 
+                        PersistentDataType.STRING, newEnchantIdsString);
+                    
+                    sender.sendMessage(configManager.getMessagesPrefix() + 
+                        "Removed &e" + cosmeticId + "&7 from item in hand.");
+                    return true;
+                }
             }
         }
         

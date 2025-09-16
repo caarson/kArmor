@@ -1,23 +1,35 @@
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
+plugins {
+  id 'java'
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
 
 group = 'me.caarson'
 version = '1.0.0'
 
+java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
 repositories {
-    mavenCentral()
-    maven { url 'https://papermc.io/repo/repository/maven-public/' }
+
+  mavenLocal()
+  maven { url 'https://repo.papermc.io/repository/maven-public/' }
+  mavenCentral()
+  maven { url 'https://maven.refinedev.xyz/public-repo' } // trailing slash fixed
 }
 
 dependencies {
-    classpath "com.github.johnrengelman:shadow:7.0.0"
-    implementation 'org.spigotmc:paper-api:1.20'
-    compileOnly 'com.github.phoenixapi:phoenix-api:1.6.3' // soft-depend
+  compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
+  implementation 'xyz.refinedev.phoenix:pxAPI:1.8.12'
 }
 
-sourceCompatibility = 18
-targetCompatibility = 18
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+tasks.named('shadowJar') { archiveClassifier.set('') }
+tasks.withType(JavaCompile).configureEach { 
+  options.encoding = 'UTF-8'
 }
