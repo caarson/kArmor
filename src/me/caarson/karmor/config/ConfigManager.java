@@ -6,11 +6,7 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-
-import me.caarson.karmor.set.ArmorPieceSpec;
-import me.caarson.karmor.set.ArmorSet;
-import me.caarson.karmor.cosmetic.CosmeticSet;
-import me.caarson.karmor.cosmetic.CosmeticEnchant;
+import me.caarson.karmor.cosmetic.CosmeticManager.CosmeticSet;
 
 public class ConfigManager {
     private final Plugin plugin;
@@ -44,21 +40,24 @@ public class ConfigManager {
         return config;
     }
     
-public ConfigurationSection getCosmeticsConfig() {
+    public ConfigurationSection getCosmeticsConfig() {
         return config.getConfigurationSection("cosmetics");
     }
     
     // Get cosmetic settings
     public boolean isCosmeticsEnabled() { 
-        return getCosmeticsConfig().getBoolean("enabled", true); 
+        ConfigurationSection cosmeticsConfig = getCosmeticsConfig();
+        return cosmeticsConfig != null && cosmeticsConfig.getBoolean("enabled", true); 
     }
     
     public int getMaxParticlesPerTickPerPlayer() { 
-        return getCosmeticsConfig().getInt("maxParticlesPerTickPerPlayer", 150); 
+        ConfigurationSection cosmeticsConfig = getCosmeticsConfig();
+        return cosmeticsConfig != null ? cosmeticsConfig.getInt("maxParticlesPerTickPerPlayer", 150) : 150; 
     }
     
     public double getVisibleRange() { 
-        return getCosmeticsConfig().getDouble("visibleRange", 32.0); 
+        ConfigurationSection cosmeticsConfig = getCosmeticsConfig();
+        return cosmeticsConfig != null ? cosmeticsConfig.getDouble("visibleRange", 32.0) : 32.0; 
     }
     
     public String get(String path, String def) {
@@ -76,24 +75,6 @@ public ConfigurationSection getCosmeticsConfig() {
         return getConfig().getDouble(path, def);
     }
 
-    // Get set-specific items, cosmetics, etc.
-    public ArmorPieceSpec getArmorPieceSpec(String setName, String slot) {
-        // Example: sets.Veteran.item.helmet
-        String path = "sets." + setName + ".item." + slot;
-        return new ArmorPieceSpec(config.getConfigurationSection(path));
-    }
-    
-    public CosmeticSet getCosmeticSet(String setName) {
-        String path = "sets." + setName + ".cosmetics";
-        return new CosmeticSet(config.getConfigurationSection(path));
-    }
-
-    // Get cosmetic enchant info
-    public CosmeticEnchant getCosmeticEnchant(String enchantId) {
-        String path = "cosmetic_enchants." + enchantId;
-        return new CosmeticEnchant(config.getConfigurationSection(path));
-    }
-    
     // Config settings for preservation and anvil
     public boolean isMergeVanillaEnchants() {
         return config.getBoolean("preserve_meta.merge_vanilla_enchants", true);
@@ -103,7 +84,7 @@ public ConfigurationSection getCosmeticsConfig() {
         return config.getBoolean("anvil.block_repairs", true);
     }
 
-public String getMessagesPrefix() {
+    public String getMessagesPrefix() {
         return config.getString("messages.prefix", "&8[&6kArmor&8]&r ");
     }
 
@@ -120,12 +101,46 @@ public String getMessagesPrefix() {
         return config.getBoolean("preserve_meta.append_lore_instead_of_replace", false);
     }
 
-    public ArmorSet getArmorSet(String setName) {
-        String path = "sets." + setName;
-        ConfigurationSection setSection = config.getConfigurationSection(path);
+    // Get armor piece specification
+    public me.caarson.karmor.set.ArmorPieceSpec getArmorPieceSpec(String setName, String slot) {
+        ConfigurationSection setSection = config.getConfigurationSection("sets." + setName);
         if (setSection != null) {
-            return new ArmorSet(setName, setSection);
+            ConfigurationSection pieceSection = setSection.getConfigurationSection("item." + slot);
+            if (pieceSection != null) {
+                return new me.caarson.karmor.set.ArmorPieceSpec(pieceSection);
+            }
         }
         return null;
+    }
+
+    // Get cosmetic enchantment
+    public me.caarson.karmor.cosmetic.CosmeticEnchant getCosmeticEnchant(String enchantId) {
+        ConfigurationSection enchantSection = config.getConfigurationSection("cosmetics.enchants." + enchantId);
+        if (enchantSection != null) {
+            return new me.caarson.karmor.cosmetic.CosmeticEnchant(enchantSection);
+        }
+        return null;
+    }
+
+    // Get armor set
+    public me.caarson.karmor.set.ArmorSet getArmorSet(String setName) {
+        ConfigurationSection setSection = config.getConfigurationSection("sets." + setName);
+        if (setSection != null) {
+            return new me.caarson.karmor.set.ArmorSet(setName, setSection);
+        }
+        return null;
+    }
+
+    // Get cosmetic set
+    public CosmeticSet getCosmeticSet(String setName) {
+        ConfigurationSection setSection = config.getConfigurationSection("sets." + setName);
+        if (setSection != null) {
+            return new CosmeticSet(setSection);
+        }
+        return null;
+    }
+
+    public boolean isRespectMaxLevels() {
+        return config.getBoolean("preserve_meta.respect_max_levels", true);
     }
 }

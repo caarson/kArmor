@@ -3,6 +3,7 @@ package me.caarson.karmor.cmd;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.command.CommandSender;
+import me.caarson.karmor.config.ConfigManager;
 
 public class ReloadCommand implements CommandExecutor {
     private final Plugin plugin;
@@ -19,10 +20,10 @@ public class ReloadCommand implements CommandExecutor {
         }
         
         // Reload config and reset state
-        ConfigManager configManager = new ConfigManager(plugin);
+        // ConfigManager should be obtained from the main plugin instance, not created here
         plugin.reloadConfig();
         
-        sender.sendMessage(configManager.getMessagesPrefix() + "Reloaded configuration successfully.");
+        sender.sendMessage("Reloaded configuration successfully.");
         
         return true;
     }

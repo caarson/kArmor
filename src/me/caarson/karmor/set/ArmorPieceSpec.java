@@ -2,7 +2,9 @@ package me.caarson.karmor.set;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import me.caarson.karmor.cosmetic.CosmeticManager;
@@ -23,13 +25,12 @@ public class ArmorPieceSpec {
     public String getEnchantType() { return section.getString("enchant_type", ""); }
     
     // Get lore text (for display purposes)
-    public Map<String, String> getLore() {
-        if (!section.contains("lore")) return lore;
-        
-        for (String key : section.getKeys(false)) {
-            lore.put(key, section.getString(key));
+    public List<String> getLore() {
+        List<String> loreList = new ArrayList<>();
+        if (section.contains("lore")) {
+            loreList = section.getStringList("lore");
         }
-        return lore;
+        return loreList;
     }
 
     // Set item metadata
@@ -38,15 +39,26 @@ public class ArmorPieceSpec {
     }
     
     // Update lore text
-    public void updateLore(Map<String, String> newLore) {
-        lore = newLore;
-        for (String key : newLore.keySet()) {
-            section.set(key, newLore.get(key));
+    public void updateLore(List<String> newLore) {
+        section.set("lore", newLore);
+    }
+
+    // Create item from specification
+    public ItemStack createItem() {
+        // Basic implementation - create a leather chestplate as placeholder
+        ItemStack item = new ItemStack(org.bukkit.Material.LEATHER_CHESTPLATE);
+        org.bukkit.inventory.meta.LeatherArmorMeta meta = (org.bukkit.inventory.meta.LeatherArmorMeta) item.getItemMeta();
+        
+        if (meta != null) {
+            meta.setDisplayName(section.getString("name", "Armor Piece"));
+            meta.setLore(getLore());
+            item.setItemMeta(meta);
         }
+        return item;
     }
 
     // Transient helper method to find cosmetic profile if already supported by other classes
-public Optional<ParticleManager.ActiveProfile> findCosmeticProfile(ItemStack stack, CosmeticManager cm) {
+    public Optional<ParticleManager.ActiveProfile> findCosmeticProfile(ItemStack stack, CosmeticManager cm) {
         return cm.loadProfile(stack);
     }
 }

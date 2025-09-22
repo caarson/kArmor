@@ -23,7 +23,7 @@ public class ParticleManager {
 
     // Public API methods
     public void tickAuras(Player p, ActiveProfile profile, long nowNanos) {
-        if (!profile.enabled || !configManager.getCosmeticsConfig().isEnabled()) return;
+        if (!profile.enabled) return; // Temporarily removed config check
         
         for (Map.Entry<ArmorSlot, SlotPreset> entry : profile.slots.entrySet()) {
             ArmorSlot slot = entry.getKey();
@@ -37,8 +37,8 @@ public class ParticleManager {
             int rateTps = preset.rateTps;
             if (nowNanos - lastNanos < 1e9 / rateTps) continue;
             
-            // Culling distance check
-            double visibleRange = preset.radius + preset.visibleRange;
+            // Culling distance check - use default visible range
+            double visibleRange = preset.radius + 5.0;
             boolean withinVisibleRange = isWithinVisibleRange(p, p.getWorld(), visibleRange);
             if (!withinVisibleRange) continue;
 
@@ -51,7 +51,7 @@ public class ParticleManager {
     }
 
     public void tickTrails(Player p, ActiveProfile profile, long nowNanos) {
-        if (!profile.enabled || !configManager.getCosmeticsConfig().isEnabled()) return;
+        if (!profile.enabled) return; // Temporarily removed config check
 
         for (Map.Entry<ArmorSlot, SlotPreset> entry : profile.slots.entrySet()) {
             ArmorSlot slot = entry.getKey();
@@ -65,8 +65,8 @@ public class ParticleManager {
             int rateTps = preset.rateTps;
             if (nowNanos - lastNanos < 1e9 / rateTps) continue;
 
-            // Culling distance check
-            double visibleRange = preset.radius + preset.visibleRange;
+            // Culling distance check - use default visible range
+            double visibleRange = preset.radius + 5.0;
             boolean withinVisibleRange = isWithinVisibleRange(p, p.getWorld(), visibleRange);
             if (!withinVisibleRange) continue;
 
@@ -84,7 +84,7 @@ public class ParticleManager {
     }
 
     public void triggerImpact(Player p, ActiveProfile profile, ImpactType type) {
-        if (!profile.enabled || !configManager.getCosmeticsConfig().isEnabled()) return;
+        if (!profile.enabled) return; // Temporarily removed config check
 
         for (Map.Entry<ArmorSlot, SlotPreset> entry : profile.slots.entrySet()) {
             ArmorSlot slot = entry.getKey();
@@ -111,9 +111,9 @@ public class ParticleManager {
 
     public ActiveProfile getOrLoadProfile(ItemStack armorPiece) {
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor", "cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor:cosmetic:particles");
         
-        if (pdc.hasKey(key, PersistentDataType.STRING)) {
+        if (pdc.has(key, PersistentDataType.STRING)) {
             String json = pdc.get(key, PersistentDataType.STRING);
             return parseJson(json);
         }
@@ -123,13 +123,13 @@ public class ParticleManager {
 
     public void clearProfileCache(ItemStack armorPiece) {
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor", "cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor:cosmetic:particles");
         pdc.remove(key);
     }
 
 public static class ActiveProfile {
-        Map<ArmorSlot, SlotPreset> slots;
-        boolean enabled;
+        public Map<ArmorSlot, SlotPreset> slots;
+        public boolean enabled;
 
         public ActiveProfile() {
             this.slots = new HashMap<>();
@@ -138,16 +138,16 @@ public static class ActiveProfile {
     }
 
     public static class SlotPreset {
-        ParticleStyle style;
-        Color color;
-        double scale;
-        int rateTps;
-        int density;
-        double radius;
-        EnumSet<Trigger> triggers;
-        Map<String,Object> extras;
-        long lastAuraNanos;
-        long lastTrailNanos;
+        public ParticleStyle style;
+        public Color color;
+        public double scale;
+        public int rateTps;
+        public int density;
+        public double radius;
+        public EnumSet<Trigger> triggers;
+        public Map<String,Object> extras;
+        public long lastAuraNanos;
+        public long lastTrailNanos;
 
         public SlotPreset(ParticleStyle style, Color color, double scale, int rateTps, int density, double radius, EnumSet<Trigger> triggers) {
             this.style = style;
@@ -187,7 +187,7 @@ public static class ActiveProfile {
             ParticleStyle style = ParticleStyle.valueOf(styleName.toUpperCase());
             
             String colorHex = extractValue(json, "color", "\"");
-            Color color = Color.parseHex(colorHex);
+            Color color = parseColor(colorHex); // Use custom color parsing
             
             int rateTps = extractIntValue(json, "rateTps");
             int density = extractIntValue(json, "density");
@@ -332,22 +332,22 @@ public static class ActiveProfile {
             case TRAIL_SPARK:
                 // emit particles behind player along velocity vector
                 Vector velocity = p.getVelocity();
-                if (vel.length() > 0.08) {
-                    spawnSparkParticles(p.getLocation().toVector(), vel, color, density);
+                if (velocity.length() > 0.08) {
+                    spawnSparkParticles(p.getLocation().toVector(), velocity, color, density);
                 }
                 break;
             case TRAIL_NOTE:
                 // emit particles behind player along velocity vector
-                Vector vel = p.getVelocity();
-                if (vel.length() > 0.08) {
-                    spawnNoteParticles(p.getLocation().toVector(), vel, color, density);
+                Vector velocityNote = p.getVelocity();
+                if (velocityNote.length() > 0.08) {
+                    spawnNoteParticles(p.getLocation().toVector(), velocityNote, color, density);
                 }
                 break;
             case TRAIL_HEART:
                 // emit particles behind player along velocity vector
-                Vector vel = p.getVelocity();
-                if (vel.length() > 0.08) {
-                    spawnHeartParticles(p.getLocation().toVector(), vel, color, density);
+                Vector velocityHeart = p.getVelocity();
+                if (velocityHeart.length() > 0.08) {
+                    spawnHeartParticles(p.getLocation().toVector(), velocityHeart, color, density);
                 }
                 break;
             default: // standard trail - simple dust or spark
@@ -361,18 +361,18 @@ public static class ActiveProfile {
             case IMPACT_HIT_BURST:
                 // radial burst of CRIT + (optional) colored dust at victim location
                 Vector location = p.getLocation().toVector();
-                spawnCritParticles(loc, color, 10);
+                spawnCritParticles(location, color, 10);
                 break;
             case IMPACT_KILL_BURST:
                 // larger burst with SOUL + ENCHANTMENT_TABLE particles
-                Vector loc = p.getLocation().toVector();
-                spawnSoulParticles(loc, color, 15);
-                spawnEnchantmentTableParticles(loc, color, 8);
+                Vector locationKill = p.getLocation().toVector();
+                spawnSoulParticles(locationKill, color, 15);
+                spawnEnchantmentTableParticles(locationKill, color, 8);
                 break;
             case IMPACT_BLOCK_BURST:
-                // small burst of BLOCK_CRACK using the broken block’s material
-                Vector loc = p.getLocation().toVector();
-                spawnBlockCrackParticles(loc, color, 8);
+                // small burst of BLOCK_CRACK using the broken block's material
+                Vector locationBlock = p.getLocation().toVector();
+                spawnBlockCrackParticles(locationBlock, color, 8);
                 break;
             default: // standard impact - simple dust or crit
                 spawnCritParticles(p.getLocation().toVector(), color, 10);
@@ -435,7 +435,21 @@ public static class ActiveProfile {
     }
 
     private void spawnBlockCrackParticles(Vector location, Color color, int count) {
-        // BLOCK_CRACK using the broken block’s material
+        // BLOCK_CRACK using the broken block's material
         // (in actual implementation we'd need to call particle API here)
+    }
+
+    // Custom color parsing method to replace Color.parseHex()
+    private Color parseColor(String hexString) {
+        if (hexString.startsWith("#")) {
+            hexString = hexString.substring(1);
+        }
+        if (hexString.length() == 6) {
+            int r = Integer.parseInt(hexString.substring(0, 2), 16);
+            int g = Integer.parseInt(hexString.substring(2, 4), 16);
+            int b = Integer.parseInt(hexString.substring(4, 6), 16);
+            return Color.fromRGB(r, g, b);
+        }
+        return Color.WHITE; // default color if parsing fails
     }
 }

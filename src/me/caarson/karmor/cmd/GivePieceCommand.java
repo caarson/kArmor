@@ -49,13 +49,18 @@ public class GivePieceCommand implements CommandExecutor {
         
         // Tag the item for kArmor
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        pdc.set(new NamespacedKey(plugin, "karmor", "set"), PersistentDataType.STRING, setName);
-        pdc.set(new NamespacedKey(plugin, "karmor", "slot"), PersistentDataType.STRING, slot);
+        pdc.set(new NamespacedKey("karmor", "set"), PersistentDataType.STRING, setName);
+        pdc.set(new NamespacedKey("karmor", "slot"), PersistentDataType.STRING, slot);
 
         // Append lore if configured
         if (configManager.isAppendLoreInsteadOfReplace()) {
+            List<String> currentLore = item.getItemMeta().getLore();
             List<String> newLore = pieceSpec.getLore();
-            item.setItemMeta(item.getItemMeta().setLore(item.getItemMeta().getLore() + newLore));
+            if (currentLore == null) {
+                currentLore = new java.util.ArrayList<>();
+            }
+            currentLore.addAll(newLore);
+            item.getItemMeta().setLore(currentLore);
         }
 
         player.getInventory().addItem(item);

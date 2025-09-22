@@ -10,6 +10,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import me.caarson.karmor.set.ArmorSet;
+import me.caarson.karmor.set.ArmorPieceSpec;
 import me.caarson.karmor.config.ConfigManager;
 import java.util.List;
 
@@ -51,12 +52,17 @@ public class GiveSetCommand implements CommandExecutor {
             ItemStack item = pieceSpec.createItem();
             
             PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-            pdc.set(new NamespacedKey(plugin, "karmor", "set"), PersistentDataType.STRING, setName);
-            pdc.set(new NamespacedKey(plugin, "karmor", "slot"), PersistentDataType.STRING, slot);
+            pdc.set(new NamespacedKey(plugin, "karmor_set"), PersistentDataType.STRING, setName);
+            pdc.set(new NamespacedKey(plugin, "karmor_slot"), PersistentDataType.STRING, slot);
 
             if (configManager.isAppendLoreInsteadOfReplace()) {
+                List<String> currentLore = item.getItemMeta().getLore();
                 List<String> newLore = pieceSpec.getLore();
-                item.setItemMeta(item.getItemMeta().setLore(item.getItemMeta().getLore() + newLore));
+                if (currentLore == null) {
+                    currentLore = new java.util.ArrayList<>();
+                }
+                currentLore.addAll(newLore);
+                item.getItemMeta().setLore(currentLore);
             }
 
             player.getInventory().addItem(item);

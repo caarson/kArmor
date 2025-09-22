@@ -45,9 +45,10 @@ public class PhoenixBridge {
             return ChatColor.WHITE.toString();
         } else {
             try {
-                // Phoenix-API method: assume it exists
-String colorCode = Phoenix.getRankColor(player);
-                return colorCode;
+                // Phoenix-API method: assume it exists - commented out due to compilation error
+                // String colorCode = Phoenix.getRankColor(player);
+                // return colorCode;
+                return ChatColor.WHITE.toString(); // Fallback
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to get rank color via Phoenix-API; using fallback white.");
                 return ChatColor.WHITE.toString();

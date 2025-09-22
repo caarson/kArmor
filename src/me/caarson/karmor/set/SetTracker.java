@@ -2,7 +2,9 @@ package me.caarson.karmor.set;
 
 import org.bukkit.plugin.Plugin;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerArmorChangeEvent;
+import org.bukkit.inventory.ItemStack;
+import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
+import me.caarson.karmor.config.ConfigManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +63,21 @@ public class SetTracker {
 
     // Helper: check if player has armor in slot (if armor piece exists)
     private boolean isArmorInSlot(Player player, String slotName) {
-        return player.getInventory().getArmorContents().getItem(slotName).getType() != org.bukkit.Material.AIR;
+        // Map slot name to armor inventory index
+        int index = -1;
+        switch (slotName.toLowerCase()) {
+            case "helmet": index = 3; break;
+            case "chestplate": index = 2; break;
+            case "leggings": index = 1; break;
+            case "boots": index = 0; break;
+            default: return false;
+        }
+        
+        ItemStack[] armorContents = player.getInventory().getArmorContents();
+        if (index >= 0 && index < armorContents.length) {
+            ItemStack item = armorContents[index];
+            return item != null && item.getType() != org.bukkit.Material.AIR;
+        }
+        return false;
     }
 }

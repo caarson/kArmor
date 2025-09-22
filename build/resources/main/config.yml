@@ -1,0 +1,15 @@
+cosmetics:
+    enabled: true
+    maxParticlesPerTickPerPlayer: 150
+    visibleRange: 32.0
+    default:
+      style: "AURA_ARCANE"
+      color: "#7F00FF"
+      rateTps: 5
+      density: 6
+      radius: 0.8
+      scale: 1.0
+      triggers: ["AURA"]
+
+armor:
+    # Existing config section for armor system

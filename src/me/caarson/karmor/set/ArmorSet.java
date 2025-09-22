@@ -36,4 +36,8 @@ public class ArmorSet {
     public String getSetName() {
         return setName;
     }
+
+    public ArmorPieceSpec getPiece(String slot) {
+        return pieces.get(slot);
+    }
 }

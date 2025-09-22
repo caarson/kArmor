@@ -9,6 +9,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.event.Listener;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import me.caarson.karmor.config.ConfigManager;
 
 public class AnvilListener implements Listener {
     private final ConfigManager configManager;
@@ -44,7 +45,7 @@ public class AnvilListener implements Listener {
         
         // Check for karmor:set tag
         String setName = pdc.get(
-            new org.bukkit.NamespacedKey(configManager.getPlugin(), "karmor", "set"),
+            new org.bukkit.NamespacedKey(configManager.getPlugin(), "karmor_set"),
             org.bukkit.persistence.PersistentDataType.STRING);
             
         return setName != null;
