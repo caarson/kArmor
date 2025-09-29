@@ -33,7 +33,7 @@ public class CosmeticManager {
 
     public Optional<ParticleManager.ActiveProfile> loadProfile(ItemStack armorPiece) {
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "karmor:cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(plugin, "karmor.cosmetic.particles");
         if (pdc.has(key, PersistentDataType.STRING)) {
             String json = pdc.get(key, PersistentDataType.STRING);
             // Temporarily return empty due to type mismatch
@@ -43,13 +43,13 @@ public class CosmeticManager {
     }
 
     public void saveProfile(ItemStack armorPiece, ParticleManager.ActiveProfile profile) {
-        NamespacedKey key = new NamespacedKey(plugin, "karmor:cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(plugin, "karmor.cosmetic.particles");
         // String json = serialize(profile);
         // armorPiece.getItemMeta().getPersistentDataContainer().set(key, PersistentDataType.STRING, json);
     }
 
     public void clearProfileCache(ItemStack armorPiece) {
-        NamespacedKey key = new NamespacedKey(plugin, "karmor:cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(plugin, "karmor.cosmetic.particles");
         armorPiece.getItemMeta().getPersistentDataContainer().remove(key);
     }
 

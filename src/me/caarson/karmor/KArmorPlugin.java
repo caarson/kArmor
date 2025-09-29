@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import me.caarson.karmor.config.ConfigManager;
 import me.caarson.karmor.cmd.KArmorCommand;
 import me.caarson.karmor.cmd.ParticleCommand;
+import me.caarson.karmor.cmd.GiveSetCommand;
 import me.caarson.karmor.cosmetic.CosmeticManager;
 
 public class KArmorPlugin extends JavaPlugin {
@@ -18,7 +19,8 @@ public class KArmorPlugin extends JavaPlugin {
         
         // Register command executors
         ParticleCommand particleCommand = new ParticleCommand(cosmeticManager, configManager);
-        KArmorCommand kArmorCommand = new KArmorCommand(particleCommand);
+        GiveSetCommand giveSetCommand = new GiveSetCommand(configManager);
+        KArmorCommand kArmorCommand = new KArmorCommand(particleCommand, giveSetCommand);
         
         getCommand("carmor").setExecutor(kArmorCommand);
         

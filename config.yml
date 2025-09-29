@@ -13,3 +13,31 @@ cosmetics:
 
 armor:
     # Existing config section for armor system
+
+sets:
+  example_set:
+    item:
+      helmet:
+        material: DIAMOND_HELMET
+        name: "&bExample Helmet"
+        lore:
+          - "&7Part of the Example Set"
+          - "&7Special ability: Aura particles"
+      chestplate:
+        material: DIAMOND_CHESTPLATE
+        name: "&bExample Chestplate"
+        lore:
+          - "&7Part of the Example Set"
+          - "&7Special ability: Wing particles"
+      legs:
+        material: DIAMOND_LEGGINGS
+        name: "&bExample Leggings"
+        lore:
+          - "&7Part of the Example Set"
+          - "&7Special ability: Swirl particles"
+      boots:
+        material: DIAMOND_BOOTS
+        name: "&bExample Boots"
+        lore:
+          - "&7Part of the Example Set"
+          - "&7Special ability: Footprint particles"

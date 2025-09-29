@@ -9,9 +9,11 @@ import java.util.List;
 
 public class KArmorCommand implements CommandExecutor {
     private final ParticleCommand particleCommand;
+    private final GiveSetCommand giveSetCommand;
 
-    public KArmorCommand(ParticleCommand particleCommand) {
+    public KArmorCommand(ParticleCommand particleCommand, GiveSetCommand giveSetCommand) {
         this.particleCommand = particleCommand;
+        this.giveSetCommand = giveSetCommand;
     }
 
     @Override
@@ -32,11 +34,18 @@ public class KArmorCommand implements CommandExecutor {
                 if (sender instanceof Player) {
                     return particleCommand.onCommand(sender, command, label, subArgs);
                 } else {
-                    sender.sendMessage("This command can only be used by players.");
+                    sender.sendMessage("§cThis command can only be used by players.");
+                }
+                break;
+            case "giveset":
+                if (sender instanceof Player) {
+                    return giveSetCommand.onCommand(sender, command, label, subArgs);
+                } else {
+                    sender.sendMessage("§cThis command can only be used by players.");
                 }
                 break;
             default:
-                sender.sendMessage("Unknown subcommand. Use /" + label + " help for available commands.");
+                sender.sendMessage("§cUnknown subcommand. Use §e/" + label + " help §cfor available commands.");
                 break;
         }
         return true;
@@ -46,6 +55,7 @@ public class KArmorCommand implements CommandExecutor {
         sender.sendMessage("§6=== KArmor Help ===");
         sender.sendMessage("§b/" + getCommandName(sender) + " help §7- Show this help menu");
         sender.sendMessage("§b/" + getCommandName(sender) + " particles <subcommand> §7- Manage armor cosmetics");
+        sender.sendMessage("§b/" + getCommandName(sender) + " giveset <set> §7- Give a full armor set with cosmetics (Admin)");
         sender.sendMessage("§eParticles Subcommands:");
         sender.sendMessage("§d  on|off §7- Toggle cosmetics on/off");
         sender.sendMessage("§d  set <slot> <style> [#color] §7- Set cosmetics for armor slot");

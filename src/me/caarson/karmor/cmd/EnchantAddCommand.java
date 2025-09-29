@@ -62,8 +62,8 @@ public class EnchantAddCommand implements CommandExecutor {
         // Add to PDC list
         PersistentDataContainer pdc = itemInHand.getItemMeta().getPersistentDataContainer();
         List<String> enchantIds = new ArrayList<>();
-if (pdc.has(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), PersistentDataType.STRING)) {
-            String enchantIdsString = pdc.get(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), PersistentDataType.STRING);
+if (pdc.has(new NamespacedKey(plugin, "karmor.cosmetic_enchants"), PersistentDataType.STRING)) {
+            String enchantIdsString = pdc.get(new NamespacedKey(plugin, "karmor.cosmetic_enchants"), PersistentDataType.STRING);
             if (enchantIdsString != null && !enchantIdsString.isEmpty()) {
                 enchantIds = new ArrayList<>(Arrays.asList(enchantIdsString.split(",")));
             }
@@ -73,7 +73,7 @@ if (pdc.has(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), PersistentDat
         if (!enchantIds.contains(cosmeticId)) {
             enchantIds.add(cosmeticId);
             String enchantIdsString = String.join(",", enchantIds);
-            pdc.set(new NamespacedKey(plugin, "karmor:cosmetic_enchants"), 
+            pdc.set(new NamespacedKey(plugin, "karmor.cosmetic_enchants"), 
                 PersistentDataType.STRING, enchantIdsString);
         }
 

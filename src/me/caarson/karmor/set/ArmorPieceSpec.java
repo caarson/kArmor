@@ -45,13 +45,30 @@ public class ArmorPieceSpec {
 
     // Create item from specification
     public ItemStack createItem() {
-        // Basic implementation - create a leather chestplate as placeholder
-        ItemStack item = new ItemStack(org.bukkit.Material.LEATHER_CHESTPLATE);
-        org.bukkit.inventory.meta.LeatherArmorMeta meta = (org.bukkit.inventory.meta.LeatherArmorMeta) item.getItemMeta();
+        // Get material from configuration
+        String materialName = section.getString("material", "LEATHER_CHESTPLATE");
+        org.bukkit.Material material = org.bukkit.Material.getMaterial(materialName);
+        if (material == null) {
+            material = org.bukkit.Material.LEATHER_CHESTPLATE; // fallback
+        }
+        
+        ItemStack item = new ItemStack(material);
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName(section.getString("name", "Armor Piece"));
-            meta.setLore(getLore());
+            // Translate color codes in display name
+            String displayName = section.getString("name", "Armor Piece");
+            displayName = org.bukkit.ChatColor.translateAlternateColorCodes('&', displayName);
+            meta.setDisplayName(displayName);
+            
+            // Translate color codes in lore
+            List<String> lore = getLore();
+            List<String> translatedLore = new ArrayList<>();
+            for (String line : lore) {
+                translatedLore.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', line));
+            }
+            meta.setLore(translatedLore);
+            
             item.setItemMeta(meta);
         }
         return item;

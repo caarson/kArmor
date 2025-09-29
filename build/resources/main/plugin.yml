@@ -1,5 +1,5 @@
 name: KArmor
-version: 1.0.0
+version: 1.0.1
 main: me.caarson.karmor.KArmorPlugin
 description: Armor system plugin for Bukkit/Paper Minecraft servers.
 website: https://github.com/caarson/kArmor

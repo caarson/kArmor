@@ -8,11 +8,13 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.Location;
 import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.EnumSet;
 import me.caarson.karmor.config.ConfigManager;
+import me.caarson.karmor.cosmetic.ParticleSFX;
 
 public class ParticleManager {
     private final ConfigManager configManager;
@@ -111,7 +113,7 @@ public class ParticleManager {
 
     public ActiveProfile getOrLoadProfile(ItemStack armorPiece) {
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor:cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor.cosmetic.particles");
         
         if (pdc.has(key, PersistentDataType.STRING)) {
             String json = pdc.get(key, PersistentDataType.STRING);
@@ -123,7 +125,7 @@ public class ParticleManager {
 
     public void clearProfileCache(ItemStack armorPiece) {
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor:cosmetic:particles");
+        NamespacedKey key = new NamespacedKey(configManager.getPlugin(), "karmor.cosmetic.particles");
         pdc.remove(key);
     }
 
@@ -380,28 +382,28 @@ public static class ActiveProfile {
     }
 
     private void spawnRedstoneParticles(Vector location, Color color, double radius) {
-        // use Bukkit Particle.REDSTONE + DustOptions(color, scale)
-        // (in actual implementation we'd need to call particle API here)
+        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
+        ParticleSFX.spawnRedstoneParticles(loc, color, radius, (int)(radius * 10));
     }
 
     private void spawnFlameParticles(Vector location, Color color, int density) {
-        // particles: FLAME
-        // (in actual implementation we'd need to call particle API here)
+        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
+        ParticleSFX.spawnFlameParticles(loc, color, density);
     }
 
     private void spawnSoulFireParticles(Vector location, Color color, int density) {
-        // particles: SOUL_FIRE_FLAME/CLOUD for frost
-        // (in actual implementation we'd need to call particle API here)
+        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
+        ParticleSFX.spawnSoulFireParticles(loc, color, density);
     }
 
     private void spawnSpellWitchParticles(Vector location, Color color, int density) {
-        // SPELL_WITCH or colored dust
-        // (in actual implementation we'd need to call particle API here)
+        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
+        ParticleSFX.spawnSpellWitchParticles(loc, color, density);
     }
 
     private void spawnCloudCritParticles(Vector location, Color color, int density) {
-        // CLOUD/CRIT at foot positions when moving
-        // (in actual implementation we'd need to call particle API here)
+        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
+        ParticleSFX.spawnCloudCritParticles(loc, color, density);
     }
 
     private void spawnSparkParticles(Vector location, Vector velocity, Color color, int density) {
