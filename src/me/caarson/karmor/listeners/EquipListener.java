@@ -29,25 +29,22 @@ public class EquipListener implements Listener {
         // Handle equipping/unequipping armor pieces
         Player player = event.getPlayer();
         
-        // Temporarily commented out due to API changes - methods like getItem(), getSlot(), isEquipping() don't exist
-        // ItemStack item = event.getItem();
-        // if (item != null && !item.getType().equals(Material.AIR)) {
-        //     ArmorSlot slot = parseSlot(event.getSlot());
-        //     
-        //     if (event.isEquipping()) {
-        //         // Load cosmetic profile into cache when equipping
-        //         ActiveProfile profile = cosmeticManager.loadProfile(item);
-        //         if (profile != null) {
-        //             // If player has global toggle OFF, don't spawn particles
-        //             if (!cosmeticManager.isCosmeticsEnabled(player)) return;
-        //             // Warm cache for future use
-        //             cosmeticManager.getOrLoadProfile(item); 
-        //         }
-        //     } else {
-        //         // Clear profile cache when unequipping
-        //         cosmeticManager.clearProfileCache(item);
-        //     }
-        // }
+        // Add debug logging
+        System.out.println("EquipListener: Armor change detected for player " + player.getName());
+        System.out.println("EquipListener: Slot type: " + event.getSlotType());
+        System.out.println("EquipListener: Old item: " + event.getOldItem());
+        System.out.println("EquipListener: New item: " + event.getNewItem());
+        
+        // Check if the new item has karmor data
+        ItemStack newItem = event.getNewItem();
+        if (newItem != null && newItem.hasItemMeta()) {
+            org.bukkit.persistence.PersistentDataContainer pdc = newItem.getItemMeta().getPersistentDataContainer();
+            if (pdc.has(new org.bukkit.NamespacedKey(cosmeticManager.getPlugin(), "karmor.cosmetic.particles"))) {
+                System.out.println("EquipListener: Found karmor cosmetic particles on new item!");
+                String profileJson = pdc.get(new org.bukkit.NamespacedKey(cosmeticManager.getPlugin(), "karmor.cosmetic.particles"), org.bukkit.persistence.PersistentDataType.STRING);
+                System.out.println("EquipListener: Profile JSON: " + profileJson);
+            }
+        }
 
         setTracker.onPlayerArmorChange(event);
     }

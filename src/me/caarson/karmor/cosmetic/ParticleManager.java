@@ -287,15 +287,7 @@ public static class ActiveProfile {
     }
 
     private boolean isWithinVisibleRange(Player p, World world, double range) {
-        // Check nearby players within visibleRange
-        for (Player player : world.getPlayers()) {
-            if (!player.equals(p)) { 
-                Vector distance = player.getLocation().toVector().subtract(p.getLocation().toVector());
-                double dist = distance.length();
-                if (dist <= range) return true;
-            }
-        }
-        return false; // no nearby players within visibleRange
+        return true; // Always show particles for the player themselves
     }
 
     private void spawnAuraParticles(Player p, ArmorSlot slot, ParticleStyle style, Color color, double scale, int density) {

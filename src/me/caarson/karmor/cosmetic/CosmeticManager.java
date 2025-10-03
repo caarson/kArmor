@@ -31,6 +31,10 @@ public class CosmeticManager {
         return particleManager; 
     }
 
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
     public Optional<ParticleManager.ActiveProfile> loadProfile(ItemStack armorPiece) {
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
         NamespacedKey key = new NamespacedKey(plugin, "karmor.cosmetic.particles");
