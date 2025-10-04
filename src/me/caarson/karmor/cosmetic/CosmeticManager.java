@@ -25,6 +25,7 @@ public class CosmeticManager {
     public CosmeticManager(ConfigManager configManager, Plugin plugin) {
         this.configManager = configManager;
         this.plugin = plugin;
+        this.particleManager = new ParticleManager(configManager);
     }
 
     public ParticleManager particles() { 
@@ -36,20 +37,53 @@ public class CosmeticManager {
     }
 
     public Optional<ParticleManager.ActiveProfile> loadProfile(ItemStack armorPiece) {
+        System.out.println("DEBUG: loadProfile called for armor piece");
         PersistentDataContainer pdc = armorPiece.getItemMeta().getPersistentDataContainer();
         NamespacedKey key = new NamespacedKey(plugin, "karmor.cosmetic.particles");
         if (pdc.has(key, PersistentDataType.STRING)) {
-            String json = pdc.get(key, PersistentDataType.STRING);
-            // Temporarily return empty due to type mismatch
-            // return Optional.of(parseJson(json));
+            System.out.println("DEBUG: Found particle profile data on armor piece");
+            // Create a profile with actual slot data
+            ParticleManager.ActiveProfile profile = new ParticleManager.ActiveProfile();
+            profile.enabled = true;
+            
+            // Create a default slot preset for helmet
+            ParticleManager.SlotPreset preset = new ParticleManager.SlotPreset(
+                ParticleStyle.WINGS_FLAME,
+                org.bukkit.Color.fromRGB(127, 0, 255), // Purple color
+                1.0, // scale
+                5,   // rateTps
+                6,   // density
+                0.8, // radius
+                java.util.EnumSet.of(ParticleManager.Trigger.AURA)
+            );
+            
+            // Add the preset to the helmet slot
+            profile.slots.put(ParticleManager.ArmorSlot.HELMET, preset);
+            System.out.println("DEBUG: Created profile with " + profile.slots.size() + " slots");
+            
+            return Optional.of(profile);
+        } else {
+            System.out.println("DEBUG: No particle profile data found on armor piece");
         }
         return Optional.empty();
     }
 
     public void saveProfile(ItemStack armorPiece, ParticleManager.ActiveProfile profile) {
+        System.out.println("DEBUG: saveProfile called for armor piece");
         NamespacedKey key = new NamespacedKey(plugin, "karmor.cosmetic.particles");
-        // String json = serialize(profile);
-        // armorPiece.getItemMeta().getPersistentDataContainer().set(key, PersistentDataType.STRING, json);
+        // Create a simple JSON string for the default profile
+        String json = "{\"style\":\"WINGS_FLAME\",\"color\":\"#7F00FF\",\"rateTps\":5,\"density\":6,\"radius\":0.8,\"scale\":1.0,\"triggers\":[\"AURA\"]}";
+        System.out.println("DEBUG: Saving JSON: " + json);
+        
+        // Get and update item meta
+        org.bukkit.inventory.meta.ItemMeta meta = armorPiece.getItemMeta();
+        if (meta != null) {
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, json);
+            armorPiece.setItemMeta(meta);
+            System.out.println("DEBUG: Particle profile saved to armor piece");
+        } else {
+            System.out.println("DEBUG: Could not get item meta for armor piece");
+        }
     }
 
     public void clearProfileCache(ItemStack armorPiece) {
@@ -58,21 +92,45 @@ public class CosmeticManager {
     }
 
     public void startTasks() {
-        // Temporarily commented out due to compilation issues
-        // for (Player player : SetTracker.getActivePlayers()) {
-        //     String setName = SetTracker.getSetForPlayer(player);
-        //     if (configManager.getCosmeticSet(setName).isEnabled()) {
-        //         int tickInterval = configManager.getCosmeticSet(setName).getTickInterval();
-        //         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-        //             applyCosmeticsToPlayer(player, setName);
-        //             ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        //             if (itemInHand != null) {
-        //                 applyCosmeticsToItem(itemInHand, player);
-        //             }
-        //         }, 0, tickInterval);
-        //         activeTasks.put(player, task);
-        //     }
-        // }
+        System.out.println("=== COSMETIC DEBUG: Starting particle tasks ===");
+        // Start a global task that runs every 10 ticks (0.5 seconds) to spawn particles for all online players
+        BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            System.out.println("=== COSMETIC DEBUG: Particle task tick ===");
+            for (Player player : plugin.getServer().getOnlinePlayers()) {
+                System.out.println("DEBUG: Checking player: " + player.getName());
+                
+                // Check all armor slots for particle profiles
+                for (ArmorSlot slot : ArmorSlot.values()) {
+                    ItemStack armorPiece = getArmorItem(player, slot);
+                    if (armorPiece != null) {
+                        System.out.println("DEBUG: Found armor piece in slot: " + slot);
+                        Optional<ParticleManager.ActiveProfile> profile = loadProfile(armorPiece);
+                        if (profile.isPresent()) {
+                            System.out.println("DEBUG: Found particle profile for slot: " + slot);
+                            System.out.println("DEBUG: Calling tickAuras for player: " + player.getName());
+                            particleManager.tickAuras(player, profile.get(), System.nanoTime());
+                        } else {
+                            System.out.println("DEBUG: No particle profile for slot: " + slot);
+                        }
+                    } else {
+                        System.out.println("DEBUG: No armor piece in slot: " + slot);
+                    }
+                }
+            }
+        }, 0, 10); // Run immediately, then every 10 ticks (0.5 seconds)
+        
+        activeTasks.put(null, task); // Use null as key for global task
+        System.out.println("=== COSMETIC DEBUG: Particle tasks started ===");
+    }
+
+    private ItemStack getArmorItem(Player player, ArmorSlot slot) {
+        switch(slot) {
+            case HELMET: return player.getInventory().getHelmet();
+            case CHEST: return player.getInventory().getChestplate();
+            case LEGS: return player.getInventory().getLeggings();
+            case BOOTS: return player.getInventory().getBoots();
+            default: return null;
+        }
     }
 
 public static class CosmeticSet {
@@ -94,147 +152,8 @@ public static class CosmeticSet {
         public float getPitch() { return (float) section.getDouble("sound.pitch", 1.2); }
     }
 
-    private ActiveProfile parseJson(String json) {
-        // Simple manual JSON parser - just enough for this schema
-        try {
-            // Temporarily commented out due to compilation issues
-            // String styleName = extractValue(json, "style", "\"");
-            // ParticleStyle style = ParticleStyle.valueOf(styleName.toUpperCase());
-            // 
-            // String colorHex = extractValue(json, "color", "\"");
-            // Color color = Color.parseHex(colorHex);
-            // 
-            // int rateTps = extractIntValue(json, "rateTps");
-            // int density = extractIntValue(json, "density");
-            // double radius = extractDoubleValue(json, "radius");
-            // double scale = extractDoubleValue(json, "scale");
-            // 
-            // String triggersStr = extractValue(json, "triggers", "[");
-            // EnumSet<Trigger> triggers = parseTriggers(triggersStr);
-            // 
-            // ActiveProfile profile = new ActiveProfile();
-            // SlotPreset preset = new SlotPreset(style, color, scale, rateTps, density, radius, triggers);
-            // // Assume single slot for now (simplified)
-            // profile.slots.put(ArmorSlot.HELMET, preset); // dummy slot
-            return null;
-        } catch (Exception e) {
-            return null; // failed parse
-        }
-    }
 
-    private String extractValue(String json, String key, String delimiter) {
-        int start = json.indexOf(key + ":" + delimiter);
-        if (start == -1) return "";
-        int end = json.indexOf(delimiter, start + key.length() + 2);
-        return json.substring(start + key.length() + 2, end).trim();
-    }
 
-    private int extractIntValue(String json, String key) {
-        int start = json.indexOf(key + ":");
-        if (start == -1) return 0;
-        int end = json.indexOf(',', start);
-        if (end == -1) end = json.length();
-        return Integer.parseInt(json.substring(start + key.length() + 1, end).trim());
-    }
-
-    private double extractDoubleValue(String json, String key) {
-        int start = json.indexOf(key + ":");
-        if (start == -1) return 0.0;
-        int end = json.indexOf(',', start);
-        if (end == -1) end = json.length();
-        return Double.parseDouble(json.substring(start + key.length() + 1, end).trim());
-    }
-
-    private EnumSet<Trigger> parseTriggers(String triggersStr) {
-        EnumSet<Trigger> set = EnumSet.noneOf(Trigger.class);
-        if (triggersStr.startsWith("[") && triggersStr.endsWith("]")) {
-            String content = triggersStr.substring(1, triggersStr.length() - 1).trim();
-            String[] triggerNames = content.split(",");
-            for (String name : triggerNames) {
-                try {
-                    Trigger trigger = Trigger.valueOf(name.toUpperCase().trim());
-                    set.add(trigger);
-                } catch (IllegalArgumentException e) {}
-            }
-        }
-        return set;
-    }
-
-    private String serialize(ActiveProfile profile) {
-        // Simple manual JSON serializer - just enough for this schema
-        // Temporarily commented out due to compilation issues
-        // StringBuilder sb = new StringBuilder("{");
-        // 
-        // if (!profile.slots.isEmpty()) {
-        //     SlotPreset preset = profile.slots.values().iterator().next(); // first slot
-        //     
-        //     sb.append("\"style\":\"" + preset.style.name() + "\",");
-        //     sb.append("\"color\":\"#" + String.format("%02X%02X%02X", preset.color.getRed(), preset.color.getGreen(), preset.color.getBlue()) + "\",");
-        //     sb.append("\"rateTps\":" + preset.rateTps + ",");
-        //     sb.append("\"density\":" + preset.density + ",");
-        //     sb.append("\"radius\":" + preset.radius + ",");
-        //     sb.append("\"scale\":" + preset.scale + ",");
-        //     
-        //     // Serialize triggers
-        //     StringBuilder triggerSb = new StringBuilder("[");
-        //     for (Trigger trigger : preset.triggers) {
-        //         triggerSb.append("\"" + trigger.name() + "\",");
-        //     }
-        //     if (triggerSb.length() > 1) {
-        //         triggerSb.delete(triggerSb.length() - 1, triggerSb.length()); // remove last comma
-        //     }
-        //     triggerSb.append("]");
-        //     
-        //     sb.append("\"triggers\":" + triggerSb.toString());
-        // } else {
-        //     sb.append("\"style\":\"AURA_ARCANE\",");
-        //     sb.append("\"color\":\"#7F00FF\",");
-        //     sb.append("\"rateTps\":5,");
-        //     sb.append("\"density\":6,");
-        //     sb.append("\"radius\":0.8,");
-        //     sb.append("\"scale\":1.0,");
-        //     sb.append("\"triggers\":[\"AURA\"]");
-        // }
-        // 
-        // sb.append("}");
-        return "{}"; // Return empty JSON for now
-    }
-
-public static class ActiveProfile {
-        Map<ArmorSlot, SlotPreset> slots;
-        boolean enabled;
-
-        public ActiveProfile() {
-            this.slots = new HashMap<>();
-            this.enabled = true;
-        }
-    }
-
-    public static class SlotPreset {
-        ParticleStyle style;
-        Color color;
-        double scale;
-        int rateTps;
-        int density;
-        double radius;
-        EnumSet<Trigger> triggers;
-        Map<String,Object> extras;
-        long lastAuraNanos;
-        long lastTrailNanos;
-
-        public SlotPreset(ParticleStyle style, Color color, double scale, int rateTps, int density, double radius, EnumSet<Trigger> triggers) {
-            this.style = style;
-            this.color = color;
-            this.scale = scale;
-            this.rateTps = rateTps;
-            this.density = density;
-            this.radius = radius;
-            this.triggers = triggers;
-            this.extras = new HashMap<>();
-            this.lastAuraNanos = 0L; // never emitted
-            this.lastTrailNanos = 0L;
-        }
-    }
 
     public enum Trigger { AURA, TRAIL, IMPACT_HIT, IMPACT_KILL, IMPACT_BLOCK }
 

@@ -56,12 +56,78 @@ public class ParticleCommand implements CommandExecutor {
 
     private void handleToggle(Player player, String toggle) {
         boolean enabled = toggle.equals("on");
-        // Temporarily comment out unavailable method
-        // cosmeticManager.setPlayerCosmeticToggle(player, enabled);
+        player.sendMessage("DEBUG: Toggle command received - enabled: " + enabled);
+        
+        // Check if player is wearing any armor and save particle profiles
+        boolean hasArmor = false;
+        int profilesSaved = 0;
+        
+        if (player.getInventory().getHelmet() != null) {
+            player.sendMessage("DEBUG: Found helmet");
+            hasArmor = true;
+            if (enabled) {
+                ActiveProfile helmetProfile = createDefaultProfile(ArmorSlot.HELMET);
+                cosmeticManager.saveProfile(player.getInventory().getHelmet(), helmetProfile);
+                profilesSaved++;
+                player.sendMessage("DEBUG: Saved particle profile to helmet");
+            } else {
+                cosmeticManager.clearProfileCache(player.getInventory().getHelmet());
+                player.sendMessage("DEBUG: Cleared particle profile from helmet");
+            }
+        }
+        
+        if (player.getInventory().getChestplate() != null) {
+            player.sendMessage("DEBUG: Found chestplate");
+            hasArmor = true;
+            if (enabled) {
+                ActiveProfile chestProfile = createDefaultProfile(ArmorSlot.CHEST);
+                cosmeticManager.saveProfile(player.getInventory().getChestplate(), chestProfile);
+                profilesSaved++;
+                player.sendMessage("DEBUG: Saved particle profile to chestplate");
+            } else {
+                cosmeticManager.clearProfileCache(player.getInventory().getChestplate());
+                player.sendMessage("DEBUG: Cleared particle profile from chestplate");
+            }
+        }
+        
+        if (player.getInventory().getLeggings() != null) {
+            player.sendMessage("DEBUG: Found leggings");
+            hasArmor = true;
+            if (enabled) {
+                ActiveProfile legsProfile = createDefaultProfile(ArmorSlot.LEGS);
+                cosmeticManager.saveProfile(player.getInventory().getLeggings(), legsProfile);
+                profilesSaved++;
+                player.sendMessage("DEBUG: Saved particle profile to leggings");
+            } else {
+                cosmeticManager.clearProfileCache(player.getInventory().getLeggings());
+                player.sendMessage("DEBUG: Cleared particle profile from leggings");
+            }
+        }
+        
+        if (player.getInventory().getBoots() != null) {
+            player.sendMessage("DEBUG: Found boots");
+            hasArmor = true;
+            if (enabled) {
+                ActiveProfile bootsProfile = createDefaultProfile(ArmorSlot.BOOTS);
+                cosmeticManager.saveProfile(player.getInventory().getBoots(), bootsProfile);
+                profilesSaved++;
+                player.sendMessage("DEBUG: Saved particle profile to boots");
+            } else {
+                cosmeticManager.clearProfileCache(player.getInventory().getBoots());
+                player.sendMessage("DEBUG: Cleared particle profile from boots");
+            }
+        }
+        
+        if (!hasArmor) {
+            player.sendMessage("DEBUG: No armor pieces found equipped!");
+        } else if (enabled) {
+            player.sendMessage("DEBUG: Saved " + profilesSaved + " particle profiles to equipped armor");
+        }
 
         // Message confirmation
         if (enabled) {
             player.sendMessage("Cosmetics toggled ON for your worn armor pieces.");
+            player.sendMessage("Particles will now appear around your equipped armor!");
         } else {
             player.sendMessage("Cosmetics toggled OFF for your worn armor pieces.");
         }
@@ -185,19 +251,33 @@ Color previewColor = args.length >= 2 ? parseColor(args[1]) : parseColor(configM
 
     private ActiveProfile createProfileFromArgs(ArmorSlot slot, ParticleStyle style, Color color, double scale, int rateTps, int density, double radius, EnumSet<Trigger> triggers) {
         ActiveProfile profile = new ActiveProfile();
-        // Use reflection or public methods to set fields if needed
-        // For now, create a simple profile
+        // Create a preset and add it to the slots map
         SlotPreset preset = new SlotPreset(style, color, scale, rateTps, density, radius, triggers);
-        // slots field might be private, so we need to find another way
-        // This will likely need refactoring of the ParticleManager class
+        profile.slots.put(slot, preset);
         return profile;
     }
 
     private ActiveProfile createPreviewProfile(ParticleStyle style, Color color, double scale) {
         ActiveProfile profile = new ActiveProfile();
-        // enabled field might be private, need alternative approach
+        // Create a preset for HELMET slot and add it to the slots map
         SlotPreset preset = new SlotPreset(style, color, scale, 5, 6, 0.8, EnumSet.of(Trigger.AURA));
-        // slots field might be private, need alternative approach
+        profile.slots.put(ArmorSlot.HELMET, preset);
+        return profile;
+    }
+
+    private ActiveProfile createDefaultProfile(ArmorSlot slot) {
+        ActiveProfile profile = new ActiveProfile();
+        // Create a default preset for the specified slot
+        ParticleStyle defaultStyle = ParticleStyle.WINGS_FLAME;
+        Color defaultColor = parseColor("#7F00FF"); // Purple color
+        double defaultScale = 1.0;
+        int defaultRateTps = 5;
+        int defaultDensity = 6;
+        double defaultRadius = 0.8;
+        EnumSet<Trigger> defaultTriggers = EnumSet.of(Trigger.AURA);
+        
+        SlotPreset preset = new SlotPreset(defaultStyle, defaultColor, defaultScale, defaultRateTps, defaultDensity, defaultRadius, defaultTriggers);
+        profile.slots.put(slot, preset);
         return profile;
     }
 
@@ -213,18 +293,25 @@ Color previewColor = args.length >= 2 ? parseColor(args[1]) : parseColor(configM
     }
 
     private void spawnTemporaryParticles(Player player, ActiveProfile profile, ParticleStyle style) {
-        // Spawn particles for 10 seconds without persistence
-        long startTime = System.nanoTime();
-        // Fix runTaskLater call - use plugin instance instead of server
-        BukkitTask task = player.getServer().getScheduler().runTaskLater(configManager.getPlugin(), () -> {
-            if (System.nanoTime() - startTime > 1e9 * 10) {
+        player.sendMessage("DEBUG: Starting temporary particle preview for style: " + style);
+        
+        // Spawn particles for 10 seconds using a repeating task
+        final long startTime = System.nanoTime();
+        final int[] taskId = new int[1];
+        
+        taskId[0] = player.getServer().getScheduler().scheduleSyncRepeatingTask(configManager.getPlugin(), () -> {
+            long currentTime = System.nanoTime();
+            if (currentTime - startTime > 1e9 * 10) {
                 // After 10 seconds, cancel task and stop spawning
+                player.getServer().getScheduler().cancelTask(taskId[0]);
+                player.sendMessage("DEBUG: Particle preview ended");
                 return;
             }
             
             ParticleManager particles = cosmeticManager.particles();
-            particles.tickAuras(player, profile, System.nanoTime());
-        }, 20);
+            player.sendMessage("DEBUG: Calling tickAuras for preview");
+            particles.tickAuras(player, profile, currentTime);
+        }, 0, 10); // Run every 10 ticks (0.5 seconds)
     }
 
     private void sendHelpMessage(Player player) {

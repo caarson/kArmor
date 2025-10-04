@@ -10,7 +10,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import java.util.EnumSet;
 import me.caarson.karmor.cosmetic.ParticleManager.ArmorSlot;
-import me.caarson.karmor.cosmetic.CosmeticManager.ActiveProfile;
 import me.caarson.karmor.cosmetic.ParticleManager.Trigger;
 import me.caarson.karmor.cosmetic.CosmeticManager;
 import me.caarson.karmor.set.SetTracker;

@@ -24,6 +24,9 @@ public class KArmorPlugin extends JavaPlugin {
         
         getCommand("carmor").setExecutor(kArmorCommand);
         
+        // Start particle spawning tasks
+        cosmeticManager.startTasks();
+        
         getLogger().info("KArmor plugin enabled!");
     }
 

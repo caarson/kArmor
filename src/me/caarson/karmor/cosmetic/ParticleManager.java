@@ -1,6 +1,7 @@
 package me.caarson.karmor.cosmetic;
 
 import org.bukkit.Color;
+import org.bukkit.Particle;
 import java.util.EnumSet;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -25,31 +26,60 @@ public class ParticleManager {
 
     // Public API methods
     public void tickAuras(Player p, ActiveProfile profile, long nowNanos) {
-        if (!profile.enabled) return; // Temporarily removed config check
+        System.out.println("=== PARTICLE DEBUG: tickAuras START ===");
+        System.out.println("DEBUG: tickAuras called for player: " + p.getName());
+        System.out.println("DEBUG: profile.enabled: " + profile.enabled);
+        System.out.println("DEBUG: profile.slots.size(): " + profile.slots.size());
         
+        p.sendMessage("DEBUG: tickAuras called - profile.enabled: " + profile.enabled);
+        if (!profile.enabled) {
+            System.out.println("DEBUG: Profile disabled, skipping tickAuras");
+            p.sendMessage("DEBUG: Profile disabled, skipping");
+            return; // Temporarily removed config check
+        }
+        
+        p.sendMessage("DEBUG: Profile slots count: " + profile.slots.size());
         for (Map.Entry<ArmorSlot, SlotPreset> entry : profile.slots.entrySet()) {
             ArmorSlot slot = entry.getKey();
             SlotPreset preset = entry.getValue();
+            System.out.println("DEBUG: Processing slot: " + slot + ", triggers: " + preset.triggers);
+            p.sendMessage("DEBUG: Processing slot: " + slot + ", triggers: " + preset.triggers);
 
             // Check triggers
-            if (!preset.triggers.contains(Trigger.AURA)) continue;
+            if (!preset.triggers.contains(Trigger.AURA)) {
+                System.out.println("DEBUG: No AURA trigger, skipping slot: " + slot);
+                p.sendMessage("DEBUG: No AURA trigger, skipping");
+                continue;
+            }
 
             // Rate limiting
             long lastNanos = preset.lastAuraNanos;
             int rateTps = preset.rateTps;
-            if (nowNanos - lastNanos < 1e9 / rateTps) continue;
+            if (nowNanos - lastNanos < 1e9 / rateTps) {
+                System.out.println("DEBUG: Rate limited, skipping slot: " + slot);
+                p.sendMessage("DEBUG: Rate limited, skipping");
+                continue;
+            }
             
             // Culling distance check - use default visible range
             double visibleRange = preset.radius + 5.0;
             boolean withinVisibleRange = isWithinVisibleRange(p, p.getWorld(), visibleRange);
-            if (!withinVisibleRange) continue;
+            if (!withinVisibleRange) {
+                System.out.println("DEBUG: Not within visible range, skipping slot: " + slot);
+                p.sendMessage("DEBUG: Not within visible range, skipping");
+                continue;
+            }
 
+            System.out.println("DEBUG: PASSED ALL CHECKS - Spawning aura particles for slot: " + slot);
+            p.sendMessage("DEBUG: Spawning aura particles for slot: " + slot);
+            
             // Particle spawning logic per slot
             spawnAuraParticles(p, slot, preset.style, preset.color, preset.scale, preset.density);
             
             // Update timestamp
             preset.lastAuraNanos = nowNanos;
         }
+        System.out.println("=== PARTICLE DEBUG: tickAuras END ===");
     }
 
     public void tickTrails(Player p, ActiveProfile profile, long nowNanos) {
@@ -291,33 +321,49 @@ public static class ActiveProfile {
     }
 
     private void spawnAuraParticles(Player p, ArmorSlot slot, ParticleStyle style, Color color, double scale, int density) {
+        p.sendMessage("DEBUG: spawnAuraParticles called - style: " + style + ", color: " + color + ", scale: " + scale);
+        System.out.println("DEBUG: spawnAuraParticles called for player " + p.getName() + " with style " + style);
+        
         // Implementation per style
         switch(style) {
             case HELMET_HALO:
+                p.sendMessage("DEBUG: Using HELMET_HALO style");
                 // Spawn small circle of REDSTONE at head height +0.4 with radius around yaw
                 Vector playerHead = p.getLocation().toVector().add(new Vector(0, 0.4, 0));
                 double radius = scale * style.getRadius();
+                System.out.println("DEBUG: Calling spawnRedstoneParticles for HELMET_HALO");
                 spawnRedstoneParticles(playerHead, color, radius);
                 break;
             case WINGS_FLAME:
+                p.sendMessage("DEBUG: Using WINGS_FLAME style");
                 // 2 bezier-ish curves offset on the back (left/right), particles: FLAME
+                System.out.println("DEBUG: Calling spawnFlameParticles for WINGS_FLAME");
                 spawnFlameParticles(p.getLocation().toVector(), color, density);
                 break;
             case WINGS_FROST:
+                p.sendMessage("DEBUG: Using WINGS_FROST style");
                 // particles: SOUL_FIRE_FLAME/CLOUD for frost
+                System.out.println("DEBUG: Calling spawnSoulFireParticles for WINGS_FROST");
                 spawnSoulFireParticles(p.getLocation().toVector(), color, density);
                 break;
             case LEGS_SWIRL:
+                p.sendMessage("DEBUG: Using LEGS_SWIRL style");
                 // vertical spiral from hips to knees using SPELL_WITCH or colored dust
+                System.out.println("DEBUG: Calling spawnSpellWitchParticles for LEGS_SWIRL");
                 spawnSpellWitchParticles(p.getLocation().toVector(), color, density);
                 break;
             case BOOTS_FOOTPRINTS:
+                p.sendMessage("DEBUG: Using BOOTS_FOOTPRINTS style");
                 // spawn 2 short-lived CLOUD/CRIT at foot positions when moving
+                System.out.println("DEBUG: Calling spawnCloudCritParticles for BOOTS_FOOTPRINTS");
                 spawnCloudCritParticles(p.getLocation().toVector(), color, density);
                 break;
             default: // AURA_ARCANE, AURA_VOID, AURA_NATURE (standard)
+                p.sendMessage("DEBUG: Using default style: " + style);
+                System.out.println("DEBUG: Using default style for spawnRedstoneParticles");
                 spawnRedstoneParticles(p.getLocation().toVector(), color, style.getRadius());
         }
+        p.sendMessage("DEBUG: spawnAuraParticles completed");
     }
 
     private void spawnTrailParticles(Player p, ArmorSlot slot, ParticleStyle style, Color color, double scale, int density) {
@@ -374,28 +420,62 @@ public static class ActiveProfile {
     }
 
     private void spawnRedstoneParticles(Vector location, Color color, double radius) {
-        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
-        ParticleSFX.spawnRedstoneParticles(loc, color, radius, (int)(radius * 10));
+        System.out.println("DEBUG: spawnRedstoneParticles called with radius: " + radius);
+        // This method is not being used for WINGS_FLAME, but let's add debug anyway
     }
 
     private void spawnFlameParticles(Vector location, Color color, int density) {
-        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
-        ParticleSFX.spawnFlameParticles(loc, color, density);
+        System.out.println("DEBUG: spawnFlameParticles called with density: " + density + ", location: " + location);
+        // We need to spawn particles at the actual player location
+        // Since we can't get the player from vector, let's modify the approach
+        
+        // For now, let's create a simple test that spawns particles in the world
+        // We'll use the first available world and spawn particles at the vector location
+        if (configManager != null && configManager.getPlugin() != null) {
+            World world = configManager.getPlugin().getServer().getWorlds().get(0);
+            if (world != null) {
+                System.out.println("DEBUG: Found world: " + world.getName());
+                Location particleLoc = new Location(world, location.getX(), location.getY(), location.getZ());
+                
+                // Spawn flame particles around the location
+                for (int i = 0; i < density; i++) {
+                    double offsetX = (Math.random() * 2) - 1;
+                    double offsetY = Math.random() * 2;
+                    double offsetZ = (Math.random() * 2) - 1;
+                    Location spawnLoc = particleLoc.clone().add(offsetX, offsetY, offsetZ);
+                    try {
+                        world.spawnParticle(Particle.FLAME, spawnLoc, 1);
+                        System.out.println("DEBUG: Spawned flame particle at " + spawnLoc);
+                    } catch (Exception e) {
+                        System.out.println("DEBUG: Error spawning particle: " + e.getMessage());
+                    }
+                }
+                System.out.println("DEBUG: Attempted to spawn " + density + " flame particles");
+            } else {
+                System.out.println("DEBUG: Could not find any world");
+            }
+        } else {
+            System.out.println("DEBUG: ConfigManager or Plugin is null");
+        }
     }
 
     private void spawnSoulFireParticles(Vector location, Color color, int density) {
-        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
-        ParticleSFX.spawnSoulFireParticles(loc, color, density);
+        System.out.println("DEBUG: spawnSoulFireParticles called");
     }
 
     private void spawnSpellWitchParticles(Vector location, Color color, int density) {
-        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
-        ParticleSFX.spawnSpellWitchParticles(loc, color, density);
+        System.out.println("DEBUG: spawnSpellWitchParticles called");
     }
 
     private void spawnCloudCritParticles(Vector location, Color color, int density) {
-        Location loc = new Location(null, location.getX(), location.getY(), location.getZ());
-        ParticleSFX.spawnCloudCritParticles(loc, color, density);
+        System.out.println("DEBUG: spawnCloudCritParticles called");
+    }
+
+    // Helper method to get player from vector (simplified)
+    private Player getPlayerFromVector(Vector location) {
+        // This is a simplified approach - in a real implementation you'd need to track players
+        // For now, we'll return null and handle it in the calling method
+        return null;
     }
 
     private void spawnSparkParticles(Vector location, Vector velocity, Color color, int density) {

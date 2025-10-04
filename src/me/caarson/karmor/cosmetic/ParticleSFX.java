@@ -14,17 +14,30 @@ public class ParticleSFX {
 
     public static void spawnRedstoneParticles(Location location, Color color, double radius, int count) {
         World world = location.getWorld();
-        if (world == null) return;
+        if (world == null) {
+            System.out.println("DEBUG: World is null in spawnRedstoneParticles");
+            return;
+        }
+        
+        System.out.println("DEBUG: Spawning " + count + " redstone particles at " + location + " with color " + color);
+        System.out.println("DEBUG: World name: " + world.getName() + ", Players in world: " + world.getPlayers().size());
         
         // Use DUST particle with DustOptions for newer versions
         DustOptions dustOptions = new DustOptions(color, 1.0f);
+        int particlesSpawned = 0;
         for (int i = 0; i < count; i++) {
             double angle = 2 * Math.PI * i / count;
             double x = radius * Math.cos(angle);
             double z = radius * Math.sin(angle);
             Location particleLoc = location.clone().add(x, 0, z);
-            world.spawnParticle(Particle.DUST, particleLoc, 1, dustOptions);
+            try {
+                world.spawnParticle(Particle.DUST, particleLoc, 1, dustOptions);
+                particlesSpawned++;
+            } catch (Exception e) {
+                System.out.println("DEBUG: Error spawning particle: " + e.getMessage());
+            }
         }
+        System.out.println("DEBUG: Successfully spawned " + particlesSpawned + " particles");
     }
 
     public static void spawnFlameParticles(Location location, Color color, int density) {
